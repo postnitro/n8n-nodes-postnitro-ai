@@ -1,0 +1,29 @@
+{
+	"compilerOptions": {
+		"lib": [
+			"es2020"
+		],
+		"target": "es2019",
+		"module": "commonjs",
+		"declaration": true,
+		"outDir": "dist",
+		"rootDir": ".",
+		"strict": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"resolveJsonModule": true,
+		"typeRoots": [
+			"./types",
+			"./node_modules/@types"
+		]
+	},
+	"include": [
+		"credentials/**/*.ts",
+		"nodes/**/*.ts",
+		"types/**/*.d.ts"
+	],
+	"exclude": [
+		"dist",
+		"node_modules"
+	]
+}

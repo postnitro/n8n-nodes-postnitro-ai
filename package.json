@@ -1,0 +1,62 @@
+{
+	"name": "@postnitro/n8n-nodes-postnitro-ai",
+	"version": "0.1.0",
+	"description": "n8n nodes for PostNitro Embed API",
+	"license": "MIT",
+	"author": "PostNitro",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/postnitro/n8n-nodes-postnitro-ai.git"
+	},
+	"engines": {
+		"node": ">=20.15"
+	},
+	"homepage": "https://github.com/postnitro/n8n-nodes-postnitro-ai#readme",
+	"bugs": {
+		"url": "https://github.com/postnitro/n8n-nodes-postnitro-ai/issues"
+	},
+	"main": "dist/nodes/PostNitro/PostNitro.node.js",
+	"types": "dist/nodes/PostNitro/PostNitro.node.d.ts",
+	"scripts": {
+		"build": "tsc -p tsconfig.json && mkdir -p dist/nodes/PostNitro && cp nodes/PostNitro/postnitro.svg dist/nodes/PostNitro/postnitro.svg",
+		"clean": "rm -rf dist",
+		"prepublishOnly": "npm run clean && npm run build"
+	},
+	"n8n": {
+		"n8nNodesApiVersion": 1,
+		"credentials": [
+			"dist/credentials/PostNitroApi.credentials.js"
+		],
+		"nodes": [
+			"dist/nodes/PostNitro/PostNitro.node.js"
+		]
+	},
+	"devDependencies": {
+		"@types/node": "^18.19.0",
+		"n8n-workflow": "^1.17.0",
+		"typescript": "^5.4.0"
+	},
+	"keywords": [
+		"n8n-community-node-package",
+		"n8n-community-node",
+		"n8n",
+		"postnitro",
+		"postnitro-embed",
+		"automation",
+		"carousel",
+		"social-media",
+		"ai",
+		"marketing"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"files": [
+		"dist/**",
+		"README.md",
+		"LICENSE"
+	],
+	"peerDependencies": {
+		"n8n-workflow": ">=1.0.0"
+	}
+}
