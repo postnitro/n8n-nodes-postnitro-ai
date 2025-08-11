@@ -74,8 +74,8 @@ export class PostNitro implements INodeType {
 				type: 'options',
 				options: [
 					{ name: 'Carousel', value: 'CAROUSEL' },
-					{ name: 'Image', value: 'IMAGE' },
-					{ name: 'Video', value: 'VIDEO' },
+					// { name: 'Image', value: 'IMAGE' },
+					// { name: 'Video', value: 'VIDEO' },
 				],
 				default: 'CAROUSEL',
 				description: 'Type of post to generate',

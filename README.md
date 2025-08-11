@@ -1,4 +1,4 @@
-# n8n-nodes-postnitro
+# n8n-nodes-postnitro-ai
 
 This is an n8n community node. It lets you use [PostNitro](https://postnitro.ai) in your n8n workflows.
 
@@ -70,3 +70,4 @@ Output formats:
 ## Version history
 
 - 0.1.0: Initial release with AI generation (Text/Article/X), Import Slides, status polling, and binary download options.
+- 0.1.1: postType drop down set to CAROUSEL type only
