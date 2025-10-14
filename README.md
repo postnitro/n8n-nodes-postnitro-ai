@@ -71,3 +71,4 @@ Output formats:
 
 - 0.1.0: Initial release with AI generation (Text/Article/X), Import Slides, status polling, and binary download options.
 - 0.1.1: postType drop down set to CAROUSEL type only
+- 0.1.2: implemented fixes suggested in node review

@@ -1,6 +1,6 @@
 {
 	"name": "@postnitro/n8n-nodes-postnitro-ai",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "n8n nodes for PostNitro Embed API",
 	"license": "MIT",
 	"author": "PostNitro",
