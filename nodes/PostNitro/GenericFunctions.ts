@@ -12,6 +12,7 @@ export async function postNitroRequest(
 	options: PostNitroRequestOptions,
 ) {
 	const credentials = await this.getCredentials('postNitroApi');
+
 	if (!credentials) {
 		throw new Error('Missing PostNitro API credentials');
 	}
@@ -31,12 +32,12 @@ export async function postNitroRequest(
 	if (options.body) {
 		requestOptions.body = options.body;
 	}
+
 	if (options.qs) {
 		requestOptions.qs = options.qs;
 	}
 
-	// @ts-ignore - n8n provides this.helpers.request
-	return await this.helpers.request(requestOptions);
+	return await this.helpers.httpRequest(requestOptions);
 }
 
 export type PostType = 'CAROUSEL' | 'IMAGE' | 'VIDEO';
@@ -57,7 +58,7 @@ export interface OutputResult {
 	success: boolean;
 	data: {
 		embedPost: { id: string; status: string; responseType: string };
-        result: { id: string; name: string; size?: string; type: string; mimeType: string; data: string | string[] };
+		result: { id: string; name: string; size?: string; type: string; mimeType: string; data: string | string[] };
 	};
 }
 
@@ -68,6 +69,7 @@ export async function waitForCompletion(
 	maxChecks: number,
 ): Promise<StatusResult> {
 	let checks = 0;
+
 	while (checks < maxChecks) {
 		const statusResp = (await postNitroRequest.call(this, {
 			method: 'GET',
@@ -75,11 +77,12 @@ export async function waitForCompletion(
 		})) as StatusResult;
 
 		const status = statusResp?.data?.embedPost?.status;
+
 		if (status === 'COMPLETED' || status === 'FAILED') {
 			return statusResp;
 		}
 
-        await sleep(pollIntervalSeconds * 1000);
+		await sleep(pollIntervalSeconds * 1000);
 		checks += 1;
 	}
 
@@ -88,7 +91,6 @@ export async function waitForCompletion(
 		method: 'GET',
 		path: `/post/status/${embedPostId}`,
 	})) as StatusResult;
+
 	return statusResp;
 }
-
-
