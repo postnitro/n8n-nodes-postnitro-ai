@@ -322,7 +322,10 @@ export class PostNitro implements INodeType {
 
 				const shouldWaitForCompletion = this.getNodeParameter('waitForCompletion', i) as boolean;
 				if (!shouldWaitForCompletion) {
-					returnData.push({ json: startResp as unknown as IDataObject });
+					returnData.push({
+						json: startResp as unknown as IDataObject,
+						pairedItem: { item: i }
+					});
 					continue;
 				}
 
@@ -339,7 +342,10 @@ export class PostNitro implements INodeType {
 				}
 
 				if (onComplete === 'status') {
-					returnData.push({ json: statusResp as unknown as IDataObject });
+					returnData.push({
+						json: statusResp as unknown as IDataObject,
+						pairedItem: { item: i }
+					});
 					continue;
 				}
 
@@ -351,7 +357,10 @@ export class PostNitro implements INodeType {
 
 				const download = this.getNodeParameter('download', i, false) as boolean;
 				if (!download) {
-					returnData.push({ json: outputResp as unknown as IDataObject });
+					returnData.push({
+						json: outputResp as unknown as IDataObject,
+						pairedItem: { item: i }
+					});
 					continue;
 				}
 
@@ -363,8 +372,7 @@ export class PostNitro implements INodeType {
 				const baseFileName = result.name || 'post';
 
 				const toBufferFromUrl = async (url: string): Promise<Buffer> => {
-					// Fetch directly from absolute URL (e.g., CDN/S3). Ensure binary buffer.
-					const resp = await this.helpers.request({
+					const resp = await this.helpers.httpRequest({
 						method: 'GET',
 						url,
 						json: false,
@@ -398,6 +406,7 @@ export class PostNitro implements INodeType {
 					returnData.push({
 						json: { embedPost, result: { ...result, data: resultData } },
 						binary,
+						pairedItem: { item: i }
 					});
 				} else {
 					// Single file (PDF or single image)
@@ -416,11 +425,15 @@ export class PostNitro implements INodeType {
 					returnData.push({
 						json: { embedPost, result: { ...result, data: resultData } },
 						binary: { [binaryPropertyName]: binaryData },
+						pairedItem: { item: i }
 					});
 				}
 			} catch (error) {
 				if (this.continueOnFail()) {
-					returnData.push({ json: { error: (error as Error).message } });
+					returnData.push({
+						json: { error: (error as Error).message },
+						pairedItem: { item: i }
+					});
 					continue;
 				}
 				throw error;
@@ -430,5 +443,3 @@ export class PostNitro implements INodeType {
 		return [returnData];
 	}
 }
-
-
