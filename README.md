@@ -2,9 +2,9 @@
 
 This is an n8n community node. It lets you use [PostNitro](https://postnitro.ai) in your n8n workflows.
 
-PostNitro.ai is a platform for creating and publishing social media carousels and visuals.
+**Turn ideas, articles, or posts into branded carousels and images — then schedule them straight to your social accounts.**
 
-The PostNitro Embed API is an embed-friendly API to generate carousel posts, images, and PDFs using AI or imported slide content to create carousels.
+This node generates carousels and single images (as PNG, PDF, or an editable design) using AI or your own imported content, and schedules those posts to LinkedIn, Instagram, TikTok, and Threads.
 
 
 [Installation](#installation)  
@@ -21,16 +21,46 @@ Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes
 
 ## Operations
 
-The PostNitro node supports:
-- Generate Carousel from Text (AI)
-- Generate Carousel from Article URL (AI)
-- Generate Carousel from X (Twitter) Post (AI)
-- Import Carousel Slides
+The PostNitro node is organized into three resources.
+
+### Create Post
+
+Create a `Carousel` or a single `Image` (choose via **Post Type**):
+- Generate from Text (AI)
+- Generate from an Article URL (AI)
+- Generate from an X (Twitter) Post (AI)
+- Import Slides / Image Content — provide your own content as JSON (an array of slides for a carousel, a single object for an image). Supports the infographic `layoutType`/`layoutConfig` fields.
+
+Response types:
+- `PDF` — single document
+- `PNG` — one image per slide
+- `Design` — skips rendering and returns a `designId` you can pass to a Scheduled Post
 
 Optional behaviors:
 - Wait for completion: Poll the post status until it completes or fails
 - On complete: Return status only, or fetch the generated output
-- Download output as binary: Attach the generated file(s) to the workflow item
+- Download output as binary: Attach the generated file(s) to the workflow item (not applicable to the `Design` response type)
+
+Template, Brand, and (for AI) AI Preset are selected from dropdowns that load from your workspace.
+
+### Scheduled Post
+
+Plan, draft, and schedule social posts to LinkedIn, Instagram, TikTok, and Threads:
+- Create — create a scheduled post or draft (`status` `SCHEDULED` or `DRAFT`)
+- Get Many — list scheduled posts within a date range
+- Update — update an existing scheduled post
+
+A post needs **either** an attached `Design ID` (e.g. the `designId` returned by a Create Post output) **or** at least one caption in **Post Content**. Per-platform requirements are configured under **Platform Settings** (JSON per platform for LinkedIn, Instagram, TikTok, and Threads). See the [Schedule API docs](https://postnitro.ai/docs/embed/api/schedule) for the conditional rules.
+
+The **Selected Accounts** field loads your connected social accounts automatically so you can pick which to publish to.
+
+### Create & Schedule
+
+One-shot helpers that create a post and schedule it in a single run:
+- **Generate & Schedule (AI)** — generate with AI, then schedule the result
+- **Import & Schedule** — import your own content, then schedule the result
+
+Each helper generates/imports (internally using the `Design` response type), waits for the design, then creates the scheduled post from it — so the scheduling fields (accounts, captions, time, platform settings) appear right on the operation. It outputs `{ embedPostId, design, scheduledPost }`. Prefer to keep the steps separate? Use a **Create Post** operation followed by **Scheduled Post → Create** instead.
 
 ## Credentials
 
@@ -42,7 +72,6 @@ Prerequisites:
 Setup in n8n:
 - Create credentials of type `PostNitro Embed API`
 - Fields:
-  - API Base URL: Base URL of the PostNitro Embed API (for example, `https://embed-api.postnitro.ai`)
   - API Key: Your API key (sent as `embed-api-key` header)
 
 ## Compatibility
@@ -52,15 +81,21 @@ Setup in n8n:
 
 ## Usage
 
-Basic flow:
-1. Choose an operation (AI generation from Text/Article/X, or Import Slides)
-2. Provide required fields such as `templateId`, `brandId`, and (for AI flows) `presetId`
-3. Optionally enable "Wait for Completion" to poll status and then fetch output
-4. If you choose to fetch output, you can return just the JSON or download the file(s) as binary
+Basic generation flow:
+1. Select the **Create Post** resource and an operation (AI generation from Text/Article/X, or Import Slides / Image Content)
+2. Choose the **Post Type** (`Carousel` or `Image`)
+3. Pick a **Template**, **Brand**, and (for AI flows) an **AI Preset** from the dropdowns
+4. Optionally enable "Wait for Completion" to poll status and then fetch output
+5. If you choose to fetch output, you can return just the JSON or download the file(s) as binary
 
 Output formats:
 - PDF: Single file
 - PNG: Multiple images (array). If "Download Output as Binary" is enabled, multiple binary properties will be attached (e.g., `data1`, `data2`, ...)
+- Design: No file is rendered; the output JSON contains a `designId` and `editorUrl`
+
+Generate-then-schedule flow:
+- **One step:** use the **Create & Schedule** resource (operation *Generate & Schedule (AI)* or *Import & Schedule*) — fill the generation fields plus the scheduling fields, and the node does the whole chain.
+- **Two steps (more control):** run a plain generate/import (any response type — every output includes a `designId`), then feed that `designId` into a **Scheduled Post → Create** with accounts, captions, and a future `Scheduled At`.
 
 ## Resources
 
@@ -72,3 +107,4 @@ Output formats:
 - 0.1.0: Initial release with AI generation (Text/Article/X), Import Slides, status polling, and binary download options.
 - 0.1.1: postType drop down set to CAROUSEL type only
 - 0.1.2: implemented fixes suggested in node review
+- 0.2.0: Renamed the generation resource to **Create Post** and added a single Image post type and the `Design` response type; new **Scheduled Post** resource (Create, Get Many, Update) with a social-account picker and Template/Brand/Preset dropdowns; new **Create & Schedule** resource with `Generate & Schedule (AI)` and `Import & Schedule` helpers; credentials simplified to just an API key.

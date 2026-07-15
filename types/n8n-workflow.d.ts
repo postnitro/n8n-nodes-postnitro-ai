@@ -24,6 +24,7 @@ declare module 'n8n-workflow' {
 			request(options: IHttpRequestOptions): Promise<any>;
 			httpRequest(options: IHttpRequestOptions): Promise<any>;
 		};
+		getNode(): any;
 	}
 
 	export interface INodeExecutionData {

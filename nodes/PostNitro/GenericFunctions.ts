@@ -1,7 +1,16 @@
-import { IDataObject, IHttpRequestOptions, ILoadOptionsFunctions, IExecuteFunctions, sleep } from 'n8n-workflow';
+import {
+	IDataObject,
+	IHttpRequestOptions,
+	ILoadOptionsFunctions,
+	IExecuteFunctions,
+	NodeOperationError,
+	sleep,
+} from 'n8n-workflow';
+
+export const POSTNITRO_BASE_URL = 'https://embed-api.postnitro.ai';
 
 export interface PostNitroRequestOptions {
-	method: 'GET' | 'POST';
+	method: 'GET' | 'POST' | 'PUT';
 	path: string;
 	body?: IDataObject;
 	qs?: IDataObject;
@@ -17,11 +26,9 @@ export async function postNitroRequest(
 		throw new Error('Missing PostNitro API credentials');
 	}
 
-	const baseUrl = (credentials as any).baseUrl as string;
-
 	const requestOptions: IHttpRequestOptions = {
 		method: options.method,
-		url: `${baseUrl}${options.path}`,
+		url: `${POSTNITRO_BASE_URL}${options.path}`,
 		headers: {
 			'Content-Type': 'application/json',
 			'embed-api-key': (credentials as any).apiKey as string,
@@ -37,7 +44,26 @@ export async function postNitroRequest(
 		requestOptions.qs = options.qs;
 	}
 
-	return await this.helpers.httpRequest(requestOptions);
+	try {
+		return await this.helpers.httpRequest(requestOptions);
+	} catch (error: any) {
+		const responseBody = error?.response?.body ?? error?.response?.data;
+		const apiMessage =
+			(responseBody && typeof responseBody === 'object'
+				? responseBody.message || responseBody.error
+				: undefined) ||
+			(typeof responseBody === 'string' ? responseBody : undefined) ||
+			error?.message ||
+			'request failed';
+		const httpCode =
+			error?.response?.statusCode ?? error?.response?.status ?? error?.httpCode ?? error?.statusCode;
+
+		throw new NodeOperationError(
+			this.getNode(),
+			`PostNitro API request to ${options.method} ${options.path} failed${httpCode ? ` (HTTP ${httpCode})` : ''
+			}: ${apiMessage}`,
+		);
+	}
 }
 
 export type PostType = 'CAROUSEL' | 'IMAGE' | 'VIDEO';

@@ -11,13 +11,6 @@ export class PostNitroApi implements ICredentialType {
 	documentationUrl = 'https://postnitro.ai/docs/embed/api';
 	properties: INodeProperties[] = [
 		{
-			displayName: 'API Base URL',
-			name: 'baseUrl',
-			type: 'string',
-			default: 'https://embed-api.postnitro.ai',
-			description: 'Base URL of the PostNitro Embed API',
-		},
-		{
 			displayName: 'API Key',
 			name: 'apiKey',
 			type: 'string',
@@ -38,7 +31,7 @@ export class PostNitroApi implements ICredentialType {
 
 	test: ICredentialTestRequest = {
 		request: {
-			baseURL: '={{$credentials.baseUrl}}',
+			baseURL: 'https://embed-api.postnitro.ai',
 			url: '/',
 			method: 'GET',
 			headers: {
