@@ -6,8 +6,9 @@ import type {
 	IDataObject,
 	INodeType,
 	INodeTypeDescription,
+	JsonObject,
 } from 'n8n-workflow';
-import { NodeOperationError } from 'n8n-workflow';
+import { NodeApiError, NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
 import {
 	postNitroRequest,
 	waitForCompletion,
@@ -22,9 +23,6 @@ const DOCS = 'https://postnitro.ai/docs/embed/api';
 /** Build a "Learn more" help link for a field description, pointing at the PostNitro docs. */
 const doc = (path: string, label = 'Learn more'): string =>
 	`<a href="${DOCS}/${path}" target="_blank">${label}</a>`;
-
-const EXPR =
-	'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>';
 
 /**
  * Build the request body for creating/updating a scheduled post from the node's
@@ -111,8 +109,9 @@ export class PostNitro implements INodeType {
 		defaults: {
 			name: 'PostNitro',
 		},
-		inputs: ['main'],
-		outputs: ['main'],
+		usableAsTool: true,
+		inputs: [NodeConnectionTypes.Main],
+		outputs: [NodeConnectionTypes.Main],
 		credentials: [
 			{
 				name: 'postNitroApi',
@@ -165,19 +164,19 @@ export class PostNitro implements INodeType {
 						description: 'Build a post from content you supply as JSON — an array of slides for a carousel, or a single object for an image',
 					},
 					{
-						name: 'Generate from Text (AI)',
+						name: 'Generate From Text (AI)',
 						value: 'aiFromText',
 						action: 'Generate a post from a text topic with AI',
 						description: 'Turn a plain-text topic or prompt into a fully branded carousel or image using AI',
 					},
 					{
-						name: 'Generate from an Article URL (AI)',
+						name: 'Generate From an Article URL (AI)',
 						value: 'aiFromArticle',
 						action: 'Generate a post from an article URL with AI',
 						description: 'Summarize an article at a given URL into a branded carousel or image using AI',
 					},
 					{
-						name: 'Generate from an X (Twitter) Post (AI)',
+						name: 'Generate From an X (Twitter) Post (AI)',
 						value: 'aiFromXPost',
 						action: 'Generate a post from an X post with AI',
 						description: 'Turn an X (Twitter) post into a branded carousel or image using AI',
@@ -266,7 +265,7 @@ export class PostNitro implements INodeType {
 				typeOptions: { loadOptionsMethod: 'getTemplates' },
 				default: '',
 				required: true,
-				description: `Template to use. ${EXPR}. Help doc: ${doc('templates', 'Templates API')}`,
+				description: 'Template to use. See the <a href="https://postnitro.ai/docs/embed/api/templates" target="_blank">Templates API</a>. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 				displayOptions: { show: { resource: ['embedPost', 'combined'] } },
 			},
 			{
@@ -276,7 +275,7 @@ export class PostNitro implements INodeType {
 				typeOptions: { loadOptionsMethod: 'getBrands' },
 				default: '',
 				required: true,
-				description: `Brand to stamp on the post. ${EXPR}. Help doc: ${doc('brands', 'Brands API')}`,
+				description: 'Brand to stamp on the post. See the <a href="https://postnitro.ai/docs/embed/api/brands" target="_blank">Brands API</a>. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 				displayOptions: { show: { resource: ['embedPost', 'combined'] } },
 			},
 			{
@@ -286,7 +285,7 @@ export class PostNitro implements INodeType {
 				typeOptions: { loadOptionsMethod: 'getPresets' },
 				default: '',
 				required: true,
-				description: `AI generation preset to use. ${EXPR}. Help doc: ${doc('ai-presets', 'AI Presets API')}`,
+				description: 'AI generation preset to use. See the <a href="https://postnitro.ai/docs/embed/api/ai-presets" target="_blank">AI Presets API</a>. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 				displayOptions: {
 					show: {
 						resource: ['embedPost', 'combined'],
@@ -333,7 +332,7 @@ export class PostNitro implements INodeType {
 				typeOptions: { rows: 4 },
 				default: '',
 				required: true,
-				description: `Topic or prompt describing what to create. Help doc: ${doc('initiate/generate#ai-generation-object', 'AI Generation API')}`,
+				description: 'Topic or prompt describing what to create. See the <a href="https://postnitro.ai/docs/embed/api/initiate/generate#ai-generation-object" target="_blank">AI Generation API</a>.',
 				displayOptions: { show: { resource: ['embedPost'], operation: ['aiFromText'] } },
 			},
 			{
@@ -342,7 +341,7 @@ export class PostNitro implements INodeType {
 				type: 'string',
 				default: '',
 				required: true,
-				description: `URL of an article to turn into a post. Help doc: ${doc('initiate/generate#ai-generation-object', 'AI Generation API')}`,
+				description: 'URL of an article to turn into a post. See the <a href="https://postnitro.ai/docs/embed/api/initiate/generate#ai-generation-object" target="_blank">AI Generation API</a>.',
 				displayOptions: { show: { resource: ['embedPost'], operation: ['aiFromArticle'] } },
 			},
 			{
@@ -351,7 +350,7 @@ export class PostNitro implements INodeType {
 				type: 'string',
 				default: '',
 				required: true,
-				description: `URL of an X (Twitter) post to turn into a post. Help doc: ${doc('initiate/generate#ai-generation-object', 'AI Generation API')}`,
+				description: 'URL of an X (Twitter) post to turn into a post. See the <a href="https://postnitro.ai/docs/embed/api/initiate/generate#ai-generation-object" target="_blank">AI Generation API</a>.',
 				displayOptions: { show: { resource: ['embedPost'], operation: ['aiFromXPost'] } },
 			},
 			{
@@ -374,7 +373,7 @@ export class PostNitro implements INodeType {
 				typeOptions: { rows: 4 },
 				default: '',
 				required: true,
-				description: `A plain-text topic/prompt, an article URL, or an X post URL — matching the chosen Source. Help doc: ${doc('initiate/generate#ai-generation-object', 'AI Generation API')}`,
+				description: 'A plain-text topic/prompt, an article URL, or an X post URL — matching the chosen Source. See the <a href="https://postnitro.ai/docs/embed/api/initiate/generate#ai-generation-object" target="_blank">AI Generation API</a>.',
 				displayOptions: { show: { resource: ['combined'], operation: ['generateAndSchedule'] } },
 			},
 			{
@@ -549,7 +548,7 @@ export class PostNitro implements INodeType {
 				type: 'string',
 				default: '',
 				required: true,
-				description: `ID of the scheduled post to update. Help doc: ${doc('schedule/update-scheduled-post', 'Schedule API')}`,
+				description: 'ID of the scheduled post to update. See the <a href="https://postnitro.ai/docs/embed/api/schedule/update-scheduled-post" target="_blank">Schedule API</a>.',
 				displayOptions: {
 					show: { resource: ['scheduledPost'], operation: ['update'] },
 				},
@@ -581,7 +580,7 @@ export class PostNitro implements INodeType {
 					{ name: 'Scheduled', value: 'SCHEDULED' },
 				],
 				default: 'SCHEDULED',
-				description: `Whether to save as a draft or schedule for publishing. Help doc: ${doc('schedule/create-scheduled-post#status', 'Create a scheduled post')}`,
+				description: 'Whether to save as a draft or schedule for publishing. See the <a href="https://postnitro.ai/docs/embed/api/schedule/create-scheduled-post#status" target="_blank">Create a scheduled post</a>.',
 				displayOptions: {
 					show: {
 						resource: ['scheduledPost', 'combined'],
@@ -626,11 +625,11 @@ export class PostNitro implements INodeType {
 				},
 				options: [
 					{ displayName: 'Common (Fallback)', name: 'common', type: 'string', typeOptions: { rows: 3 }, default: '' },
-					{ displayName: 'LinkedIn', name: 'linkedin', type: 'string', typeOptions: { rows: 3 }, default: '' },
-					{ displayName: 'Instagram', name: 'instagram', type: 'string', typeOptions: { rows: 3 }, default: '' },
-					{ displayName: 'TikTok', name: 'tiktok', type: 'string', typeOptions: { rows: 3 }, default: '' },
 					{ displayName: 'Facebook', name: 'facebook', type: 'string', typeOptions: { rows: 3 }, default: '' },
+					{ displayName: 'Instagram', name: 'instagram', type: 'string', typeOptions: { rows: 3 }, default: '' },
+					{ displayName: 'LinkedIn', name: 'linkedin', type: 'string', typeOptions: { rows: 3 }, default: '' },
 					{ displayName: 'Threads', name: 'threads', type: 'string', typeOptions: { rows: 3 }, default: '' },
+					{ displayName: 'TikTok', name: 'tiktok', type: 'string', typeOptions: { rows: 3 }, default: '' },
 				],
 			},
 			{
@@ -639,7 +638,7 @@ export class PostNitro implements INodeType {
 				type: 'multiOptions',
 				typeOptions: { loadOptionsMethod: 'getSocialAccounts' },
 				default: [],
-				description: `Social accounts to publish to. Choose from the list, or specify IDs using an expression. The chosen platforms determine which platform settings are required. Help doc: ${doc('social-accounts', 'Social Accounts API')}`,
+				description: 'Social accounts to publish to. The chosen platforms determine which platform settings are required. See the <a href="https://postnitro.ai/docs/embed/api/social-accounts" target="_blank">Social Accounts API</a>. Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 				displayOptions: {
 					show: {
 						resource: ['scheduledPost', 'combined'],
@@ -895,7 +894,9 @@ export class PostNitro implements INodeType {
 					try {
 						slides = typeof slidesJson === 'string' ? JSON.parse(slidesJson) : slidesJson;
 					} catch (e: any) {
-						throw new NodeOperationError(this.getNode(), `Invalid slides JSON: ${e.message}`);
+						throw new NodeOperationError(this.getNode(), `Invalid slides JSON: ${e.message}`, {
+							itemIndex: i,
+						});
 					}
 
 					if (postType === 'IMAGE') {
@@ -903,12 +904,14 @@ export class PostNitro implements INodeType {
 							throw new NodeOperationError(
 								this.getNode(),
 								'For an IMAGE post, Slides / Image must be a single JSON object',
+								{ itemIndex: i },
 							);
 						}
 					} else if (!Array.isArray(slides)) {
 						throw new NodeOperationError(
 							this.getNode(),
 							'For a CAROUSEL post, Slides / Image must be a JSON array',
+							{ itemIndex: i },
 						);
 					}
 
@@ -928,7 +931,9 @@ export class PostNitro implements INodeType {
 				}
 
 				if (!startResp?.success) {
-					throw new NodeOperationError(this.getNode(), 'Failed to initiate post');
+					throw new NodeOperationError(this.getNode(), 'Failed to initiate post', {
+						itemIndex: i,
+					});
 				}
 
 				const embedPostId = (startResp as any).data.embedPostId as string;
@@ -942,12 +947,14 @@ export class PostNitro implements INodeType {
 						throw new NodeOperationError(
 							this.getNode(),
 							`Generation failed${lastLog?.message ? `: ${lastLog.message}` : ''}`,
+							{ itemIndex: i },
 						);
 					}
 					if (genStatus !== 'COMPLETED') {
 						throw new NodeOperationError(
 							this.getNode(),
 							'Timed out waiting for generation to complete; the post could not be scheduled',
+							{ itemIndex: i },
 						);
 					}
 
@@ -961,6 +968,7 @@ export class PostNitro implements INodeType {
 						throw new NodeOperationError(
 							this.getNode(),
 							'Generation completed but no designId was returned, so the post could not be scheduled',
+							{ itemIndex: i },
 						);
 					}
 
@@ -1002,6 +1010,7 @@ export class PostNitro implements INodeType {
 					throw new NodeOperationError(
 						this.getNode(),
 						`Generation failed${lastLog?.message ? `: ${lastLog.message}` : ''}`,
+						{ itemIndex: i },
 					);
 				}
 
@@ -1043,7 +1052,7 @@ export class PostNitro implements INodeType {
 						method: 'GET',
 						url,
 						json: false,
-						encoding: null,
+						encoding: 'arraybuffer',
 					});
 					if (Buffer.isBuffer(resp)) return resp as Buffer;
 					return Buffer.from(resp);
@@ -1060,7 +1069,9 @@ export class PostNitro implements INodeType {
 						} else if (typeof urlOrString === 'string' && /^(?:[A-Za-z0-9+/]+={0,2})$/.test(urlOrString)) {
 							buffer = Buffer.from(urlOrString, 'base64');
 						} else {
-							throw new NodeOperationError(this.getNode(), 'Unsupported result item format');
+							throw new NodeOperationError(this.getNode(), 'Unsupported result item format', {
+								itemIndex: i,
+							});
 						}
 						const fileName = `${baseFileName}-${index}.${extension}`;
 						const bin = await this.helpers.prepareBinaryData(buffer);
@@ -1082,7 +1093,9 @@ export class PostNitro implements INodeType {
 					} else if (typeof resultData === 'string' && /^(?:[A-Za-z0-9+/]+={0,2})$/.test(resultData)) {
 						buffer = Buffer.from(resultData, 'base64');
 					} else {
-						throw new NodeOperationError(this.getNode(), 'Unsupported result format');
+						throw new NodeOperationError(this.getNode(), 'Unsupported result format', {
+							itemIndex: i,
+						});
 					}
 					const fileName = `${baseFileName}.${extension}`;
 					const binaryData = await this.helpers.prepareBinaryData(buffer);
@@ -1102,7 +1115,7 @@ export class PostNitro implements INodeType {
 					});
 					continue;
 				}
-				throw error;
+				throw new NodeApiError(this.getNode(), error as JsonObject, { itemIndex: i });
 			}
 		}
 

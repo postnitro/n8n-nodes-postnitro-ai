@@ -79,7 +79,7 @@ Setup in n8n:
 ## Compatibility
 
 - Minimum n8n version: 1.0+
-- Tested with `n8n-workflow` ^1.40.0 and TypeScript ^5.4.0
+- Built against `n8n-workflow` ^2.16.0 and TypeScript ^5.4.0 (the `n8n-workflow` peer dependency is `*`, so the node runs on the version your n8n host provides)
 
 ## Usage
 
@@ -111,3 +111,4 @@ Generate-then-schedule flow:
 - 0.1.2: implemented fixes suggested in node review
 - 0.2.0: Renamed the generation resource to **Create Post** and added a single Image post type and the `Design` response type; new **Scheduled Post** resource (Create, Get Many, Update) with a social-account picker and Template/Brand/Preset dropdowns; new **Create & Schedule** resource with `Generate & Schedule (AI)` and `Import & Schedule` helpers; credentials simplified to just an API key.
 - 0.2.1: Added optional **AI image generation** (`Generate AI Images`) on all generate/import operations; HTTP failures now raise `NodeApiError` (full response context, no serialization errors); published to npm with provenance via GitHub Actions.
+- 0.2.2: Addressed the n8n community-node scanner review. Authenticated requests now use `httpRequestWithAuthentication()`; every in-loop error carries `{ itemIndex }` for correct per-item reporting; the node is now usable as a tool in AI agent workflows (`usableAsTool: true`); connection types use `NodeConnectionTypes.Main`; the credential exposes an `icon`; and the outer error handler wraps failures in `NodeApiError`. Upgraded `n8n-workflow` to `2.16.0` (removing an outdated local type shim) and set the peer dependency to `*`, plus assorted description/lint cleanups.

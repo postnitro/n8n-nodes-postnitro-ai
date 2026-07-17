@@ -5,7 +5,6 @@ import {
 	IExecuteFunctions,
 	JsonObject,
 	NodeApiError,
-	NodeOperationError,
 	sleep,
 } from 'n8n-workflow';
 
@@ -22,18 +21,11 @@ export async function postNitroRequest(
 	this: IExecuteFunctions | ILoadOptionsFunctions,
 	options: PostNitroRequestOptions,
 ) {
-	const credentials = await this.getCredentials('postNitroApi');
-
-	if (!credentials) {
-		throw new NodeOperationError(this.getNode(), 'Missing PostNitro API credentials');
-	}
-
 	const requestOptions: IHttpRequestOptions = {
 		method: options.method,
 		url: `${POSTNITRO_BASE_URL}${options.path}`,
 		headers: {
 			'Content-Type': 'application/json',
-			'embed-api-key': (credentials as any).apiKey as string,
 		},
 		json: true,
 	} as IHttpRequestOptions;
@@ -47,7 +39,10 @@ export async function postNitroRequest(
 	}
 
 	try {
-		return await this.helpers.httpRequest(requestOptions);
+		// httpRequestWithAuthentication injects the credential (the `embed-api-key`
+		// header is applied by the credential's `authenticate` property) and gains
+		// future n8n improvements like token refresh and audit logging.
+		return await this.helpers.httpRequestWithAuthentication.call(this, 'postNitroApi', requestOptions);
 	} catch (error) {
 		// NodeApiError is the idiomatic class for HTTP/API failures: it preserves
 		// the full response context in the n8n UI and, unlike the raw error,
