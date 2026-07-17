@@ -25,15 +25,19 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           registry-url: 'https://registry.npmjs.org'
 
-      # Trusted Publishing requires npm >= 11.5.1; the runner ships npm 10.
+      # Trusted Publishing requires npm >= 11.5.1. Node 24 ships npm 11, but
+      # upgrade to be safe; the latest npm needs Node 22.22+/24.15+, so this
+      # step must run on Node 24 (not 20).
       - name: Upgrade npm
         run: npm install -g npm@latest
 
+      # npm install (not ci) so a stale package-lock.json doesn't block the
+      # build — the lockfile isn't kept in lockstep with manual version bumps.
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Build
         run: npm run build
