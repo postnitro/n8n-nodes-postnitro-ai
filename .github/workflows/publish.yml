@@ -26,7 +26,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          registry-url: 'https://registry.npmjs.org'
 
       # Trusted Publishing requires npm >= 11.5.1. Node 24 ships npm 11, but
       # upgrade to be safe; the latest npm needs Node 22.22+/24.15+, so this
