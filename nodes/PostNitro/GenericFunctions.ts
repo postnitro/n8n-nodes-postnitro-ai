@@ -3,6 +3,8 @@ import {
 	IHttpRequestOptions,
 	ILoadOptionsFunctions,
 	IExecuteFunctions,
+	JsonObject,
+	NodeApiError,
 	NodeOperationError,
 	sleep,
 } from 'n8n-workflow';
@@ -23,7 +25,7 @@ export async function postNitroRequest(
 	const credentials = await this.getCredentials('postNitroApi');
 
 	if (!credentials) {
-		throw new Error('Missing PostNitro API credentials');
+		throw new NodeOperationError(this.getNode(), 'Missing PostNitro API credentials');
 	}
 
 	const requestOptions: IHttpRequestOptions = {
@@ -46,23 +48,11 @@ export async function postNitroRequest(
 
 	try {
 		return await this.helpers.httpRequest(requestOptions);
-	} catch (error: any) {
-		const responseBody = error?.response?.body ?? error?.response?.data;
-		const apiMessage =
-			(responseBody && typeof responseBody === 'object'
-				? responseBody.message || responseBody.error
-				: undefined) ||
-			(typeof responseBody === 'string' ? responseBody : undefined) ||
-			error?.message ||
-			'request failed';
-		const httpCode =
-			error?.response?.statusCode ?? error?.response?.status ?? error?.httpCode ?? error?.statusCode;
-
-		throw new NodeOperationError(
-			this.getNode(),
-			`PostNitro API request to ${options.method} ${options.path} failed${httpCode ? ` (HTTP ${httpCode})` : ''
-			}: ${apiMessage}`,
-		);
+	} catch (error) {
+		// NodeApiError is the idiomatic class for HTTP/API failures: it preserves
+		// the full response context in the n8n UI and, unlike the raw error,
+		// serializes cleanly (no circular socket references).
+		throw new NodeApiError(this.getNode(), error as JsonObject);
 	}
 }
 

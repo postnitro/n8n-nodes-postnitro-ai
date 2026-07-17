@@ -1,6 +1,6 @@
 {
 	"name": "@postnitro/n8n-nodes-postnitro-ai",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"description": "Turn ideas, articles, or posts into branded carousels and images — then schedule them straight to your social accounts",
 	"license": "MIT",
 	"author": "PostNitro",
