@@ -35,8 +35,12 @@ jobs:
 
       # npm install (not ci) so a stale package-lock.json doesn't block the
       # build — the lockfile isn't kept in lockstep with manual version bumps.
+      # --ignore-scripts skips the native build of isolated-vm (pulled in
+      # transitively via n8n-workflow -> @n8n/expression-runtime). It's a
+      # runtime dependency provided by the n8n host and is never used by this
+      # node; the build only needs n8n-workflow's TypeScript declarations.
       - name: Install dependencies
-        run: npm install
+        run: npm install --ignore-scripts
 
       - name: Build
         run: npm run build

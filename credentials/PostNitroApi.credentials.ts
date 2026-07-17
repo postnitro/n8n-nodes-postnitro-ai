@@ -1,5 +1,6 @@
 import {
 	IAuthenticateGeneric,
+	Icon,
 	ICredentialType,
 	INodeProperties,
 	ICredentialTestRequest
@@ -9,6 +10,7 @@ export class PostNitroApi implements ICredentialType {
 	name = 'postNitroApi';
 	displayName = 'PostNitro Embed API';
 	documentationUrl = 'https://postnitro.ai/docs/embed/api';
+	icon: Icon = 'file:../nodes/PostNitro/postnitro.svg';
 	properties: INodeProperties[] = [
 		{
 			displayName: 'API Key',
