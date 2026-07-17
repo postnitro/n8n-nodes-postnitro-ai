@@ -77,6 +77,26 @@ function buildScheduleBody(ctx: IExecuteFunctions, i: number, designId?: string)
 	return body;
 }
 
+/**
+ * Build the optional `generateImages` object for the initiate endpoints. Its
+ * presence is the opt-in, so this returns undefined when the toggle is off. Only
+ * `context`, `imagePlacement`, and `imageStrategy` are sent — everything else
+ * (image model, copy config, editorType) is resolved server-side.
+ */
+function buildGenerateImages(ctx: IExecuteFunctions, i: number): IDataObject | undefined {
+	const enabled = ctx.getNodeParameter('generateImages', i, false) as boolean;
+	if (!enabled) return undefined;
+
+	const cfg: IDataObject = {
+		imagePlacement: ctx.getNodeParameter('imagePlacement', i, 'auto') as string,
+		imageStrategy: ctx.getNodeParameter('imageStrategy', i, 'strategic') as string,
+	};
+	const context = ctx.getNodeParameter('imageContext', i, '') as string;
+	if (context && context.trim() !== '') cfg.context = context;
+
+	return cfg;
+}
+
 export class PostNitro implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'PostNitro',
@@ -380,6 +400,52 @@ export class PostNitro implements INodeType {
 				default: '',
 				description: `For CAROUSEL: an array of slides (exactly one starting_slide, at least one body_slide, exactly one ending_slide). For IMAGE: a single slide object. Both support the infographic layoutType/layoutConfig fields. Help doc: ${doc('initiate/import#slide-structure', 'Import API & slide structure')}`,
 				displayOptions: { show: { resource: ['embedPost', 'combined'], operation: ['importSlides', 'importAndSchedule'] } },
+			},
+
+			// AI image generation (optional, opt-in) — applies to both generate and import
+			{
+				displayName: 'Generate AI Images',
+				name: 'generateImages',
+				type: 'boolean',
+				default: false,
+				description: `Whether to have AI generate images and bake them into the post before rendering. Best-effort — the post still completes if images are skipped (e.g. Free plan or over the AI-image quota). Help doc: ${doc('initiate/generate#ai-image-generation', 'AI image generation')}`,
+				displayOptions: { show: { resource: ['embedPost', 'combined'] } },
+			},
+			{
+				displayName: 'Image Context',
+				name: 'imageContext',
+				type: 'string',
+				typeOptions: { rows: 2 },
+				default: '',
+				description:
+					'Optional brief that guides the image prompts. If empty, Generate reuses your AI context/preset and Import uses sensible defaults.',
+				displayOptions: { show: { resource: ['embedPost', 'combined'], generateImages: [true] } },
+			},
+			{
+				displayName: 'Image Placement',
+				name: 'imagePlacement',
+				type: 'options',
+				options: [
+					{ name: 'Auto (AI Decides)', value: 'auto' },
+					{ name: 'Background', value: 'background' },
+					{ name: 'In-Line', value: 'in-line' },
+				],
+				default: 'auto',
+				description: 'Where generated images are placed on each slide',
+				displayOptions: { show: { resource: ['embedPost', 'combined'], generateImages: [true] } },
+			},
+			{
+				displayName: 'Image Strategy',
+				name: 'imageStrategy',
+				type: 'options',
+				options: [
+					{ name: 'Strategic (About Half the Slides)', value: 'strategic' },
+					{ name: 'All Eligible Slides', value: 'all' },
+				],
+				default: 'strategic',
+				description:
+					'How many slides get an image. Strategic caps at roughly half for a balanced look; All images every eligible slide (subject to your AI-image quota).',
+				displayOptions: { show: { resource: ['embedPost', 'combined'], generateImages: [true] } },
 			},
 
 			// Wait / output options
@@ -772,6 +838,9 @@ export class PostNitro implements INodeType {
 					? 'DESIGN'
 					: (this.getNodeParameter('responseType', i) as string);
 
+				// Optional AI image generation (opt-in), shared by generate and import.
+				const generateImagesCfg = buildGenerateImages(this, i);
+
 				let startResp: StartResult | undefined;
 				let aiSource: AiSource | undefined;
 
@@ -813,6 +882,8 @@ export class PostNitro implements INodeType {
 						},
 					};
 
+					if (generateImagesCfg) body.generateImages = generateImagesCfg;
+
 					startResp = (await postNitroRequest.call(this, {
 						method: 'POST',
 						path: '/post/initiate/generate',
@@ -851,6 +922,7 @@ export class PostNitro implements INodeType {
 							brandId,
 							responseType,
 							slides: slides as IDataObject | IDataObject[],
+							...(generateImagesCfg ? { generateImages: generateImagesCfg } : {}),
 						},
 					})) as StartResult;
 				}

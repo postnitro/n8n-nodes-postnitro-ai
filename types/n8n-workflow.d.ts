@@ -73,4 +73,10 @@ declare module 'n8n-workflow' {
 	export class NodeOperationError extends Error {
 		constructor(node: any, message: string);
 	}
+
+	export type JsonObject = { [key: string]: any };
+
+	export class NodeApiError extends Error {
+		constructor(node: any, error: JsonObject, options?: IDataObject);
+	}
 }
